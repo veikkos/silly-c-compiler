@@ -18,7 +18,7 @@ export interface Token {
 }
 
 export function tokenize(code: string): Token[] {
-    const keywords = new Set(["int", "return"]);
+    const keywords = new Set(["int"]);
     const operators = new Set(["=", "+"]);
     const punctuation = new Set([";", "{", "}", "(", ")"]);
 

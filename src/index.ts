@@ -3,8 +3,9 @@ import { parse } from "./parser";
 import { performSemanticAnalysis } from "./semantic";
 import { generateAssemblyCode } from "./codegen";
 
+// hacked for now: int main() {
 const code = `
-  int main() {
+  main {
     int a = 5;
     int b = 10;
     int sum = a + b;
@@ -13,9 +14,7 @@ const code = `
 `;
 
 const tokens = tokenize(code);
-console.log(tokens)
 const ast = parse(tokens);
-console.log(tokens)
 performSemanticAnalysis(ast);
 const assemblyCode = generateAssemblyCode(ast);
 

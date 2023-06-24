@@ -1,5 +1,13 @@
 import { Token, TokenType } from "./lexer";
-import { ASTNode, IdentifierNode, LiteralNode, VariableDeclarationNode, ReturnStatementNode, FunctionDeclarationNode, BinaryExpressionNode } from "./ast";
+import {
+    ASTNode,
+    IdentifierNode,
+    LiteralNode,
+    VariableDeclarationNode,
+    ReturnStatementNode,
+    FunctionDeclarationNode,
+    BinaryExpressionNode,
+} from "./ast";
 
 let tokens: Token[] = [];
 let cursor = 0;
