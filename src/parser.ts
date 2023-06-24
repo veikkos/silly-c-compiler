@@ -16,9 +16,14 @@ export function parse(tokenList: Token[]): ASTNode {
     tokens = tokenList;
     cursor = 0;
 
+    match(TokenType.IntKeyword);
+    const identifier = parseIdentifier();
+    match(TokenType.LeftParen);
+    match(TokenType.RightParen);
+
     const programNode: FunctionDeclarationNode = {
         type: "FunctionDeclaration",
-        identifier: parseIdentifier(),
+        identifier,
         body: parseBlock(),
     };
 
