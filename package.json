@@ -1,0 +1,16 @@
+{
+  "name": "typescript-c-compiler",
+  "version": "1.0.0",
+  "description": "A simple TypeScript C compiler",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js"
+  },
+  "devDependencies": {
+    "typescript": "^4.5.4"
+  },
+  "dependencies": {
+    "@types/node": "^16.11.6",
+    "child_process": "^1.0.2"
+  }
+}
