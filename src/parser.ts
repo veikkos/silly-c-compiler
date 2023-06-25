@@ -1,4 +1,4 @@
-import { Token, TokenType } from "./lexer";
+import { Token, TokenType } from './lexer';
 import {
     ASTNode,
     IdentifierNode,
@@ -7,7 +7,7 @@ import {
     ReturnStatementNode,
     FunctionDeclarationNode,
     BinaryExpressionNode,
-} from "./ast";
+} from './ast';
 
 let tokens: Token[] = [];
 let cursor = 0;
@@ -22,7 +22,7 @@ export function parse(tokenList: Token[]): ASTNode {
     match(TokenType.RightParen);
 
     const programNode: FunctionDeclarationNode = {
-        type: "FunctionDeclaration",
+        type: 'FunctionDeclaration',
         identifier,
         body: parseBlock(),
     };
@@ -66,10 +66,14 @@ function parseVariableDeclaration(): VariableDeclarationNode {
 
     match(TokenType.Semicolon);
 
+    if (!value) {
+        throw new Error('Variable declaration must have a value');
+    }
+
     return {
-        type: "VariableDeclaration",
+        type: 'VariableDeclaration',
         identifier,
-        value: value!!,
+        value,
     };
 }
 
@@ -79,7 +83,7 @@ function parseReturnStatement(): ReturnStatementNode {
     match(TokenType.Semicolon);
 
     return {
-        type: "ReturnStatement",
+        type: 'ReturnStatement',
         argument,
     };
 }
@@ -87,12 +91,15 @@ function parseReturnStatement(): ReturnStatementNode {
 function parseExpression(): ASTNode {
     let node = parseTerm();
 
-    while (tokens[cursor].type === TokenType.Plus || tokens[cursor].type === TokenType.Minus) {
+    while (
+        tokens[cursor].type === TokenType.Plus ||
+        tokens[cursor].type === TokenType.Minus
+    ) {
         const operator = tokens[cursor].type;
         match(operator);
 
         const binaryExpressionNode: BinaryExpressionNode = {
-            type: "BinaryExpression",
+            type: 'BinaryExpression',
             operator: getOperatorSymbol(operator),
             left: node,
             right: parseTerm(),
@@ -107,9 +114,9 @@ function parseExpression(): ASTNode {
 function getOperatorSymbol(tokenType: TokenType): string {
     switch (tokenType) {
         case TokenType.Plus:
-            return "+";
+            return '+';
         case TokenType.Minus:
-            return "-";
+            return '-';
         default:
             throw new Error(`Unsupported operator: ${tokenType}`);
     }
@@ -128,7 +135,7 @@ function parseTerm(): ASTNode {
 function parseIdentifier(): IdentifierNode {
     const token = match(TokenType.Identifier);
     return {
-        type: "Identifier",
+        type: 'Identifier',
         value: token.value,
     };
 }
@@ -136,7 +143,7 @@ function parseIdentifier(): IdentifierNode {
 function parseLiteral(): LiteralNode {
     const token = match(TokenType.IntLiteral);
     return {
-        type: "Literal",
+        type: 'Literal',
         value: token.value,
     };
 }
@@ -148,6 +155,8 @@ function match(expectedType: TokenType): Token {
         cursor++;
         return token;
     } else {
-        throw new Error(`Unexpected token: ${token.type}. Expected: ${expectedType}`);
+        throw new Error(
+            `Unexpected token: ${token.type}. Expected: ${expectedType}`,
+        );
     }
 }

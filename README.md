@@ -3,6 +3,7 @@
 Messing around with ChatGPT and TypeScript. This is a very simple C compiler that compiles a very simple C program into x86 assembly code.
 
 ## Usage
+
 ```bash
 $ npm install
 $ npm run build

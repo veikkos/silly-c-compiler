@@ -1,6 +1,6 @@
-import { ASTNode, FunctionDeclarationNode, IdentifierNode, LiteralNode } from "./ast";
+import { ASTNode, FunctionDeclarationNode } from './ast';
 
-let assemblyCode = "";
+let assemblyCode = '';
 
 function generateAssemblyCode(ast: ASTNode): string {
     generateProgram(ast);
@@ -8,16 +8,16 @@ function generateAssemblyCode(ast: ASTNode): string {
 }
 
 function generateProgram(node: ASTNode): void {
-    if (node.type !== "FunctionDeclaration") {
-        throw new Error("Program must contain a function declaration");
+    if (node.type !== 'FunctionDeclaration') {
+        throw new Error('Program must contain a function declaration');
     }
 
     generateFunctionDeclaration(node);
 }
 
 function generateFunctionDeclaration(node: FunctionDeclarationNode): void {
-    if (node.identifier.type !== "Identifier") {
-        throw new Error("Function declaration must have an identifier");
+    if (node.identifier.type !== 'Identifier') {
+        throw new Error('Function declaration must have an identifier');
     }
 
     assemblyCode += `${node.identifier.value}:`;
@@ -28,18 +28,18 @@ function generateFunctionDeclaration(node: FunctionDeclarationNode): void {
 
 function generateStatement(node: ASTNode): void {
     switch (node.type) {
-        case "VariableDeclaration":
+        case 'VariableDeclaration':
             generateExpression(node.identifier);
-            assemblyCode += " dw ";
+            assemblyCode += ' dw ';
             generateExpression(node.value);
             newline();
             break;
 
-        case "ReturnStatement":
-            assemblyCode += "mov ax, ";
+        case 'ReturnStatement':
+            assemblyCode += 'mov ax, ';
             generateExpression(node.argument);
             newline();
-            assemblyCode += "ret";
+            assemblyCode += 'ret';
             newline();
             break;
 
@@ -50,21 +50,21 @@ function generateStatement(node: ASTNode): void {
 
 function generateExpression(node: ASTNode): void {
     switch (node.type) {
-        case "Identifier":
-            if (node.type !== "Identifier") {
-                throw new Error("Identifier node must have a value");
+        case 'Identifier':
+            if (node.type !== 'Identifier') {
+                throw new Error('Identifier node must have a value');
             }
             assemblyCode += node.value;
             break;
 
-        case "Literal":
-            if (node.type !== "Literal") {
-                throw new Error("Literal node must have a value");
+        case 'Literal':
+            if (node.type !== 'Literal') {
+                throw new Error('Literal node must have a value');
             }
             assemblyCode += node.value;
             break;
 
-        case "BinaryExpression":
+        case 'BinaryExpression':
             generateExpression(node.left);
             assemblyCode += ` ${getOperatorCode(node.operator)} `;
             generateExpression(node.right);
@@ -91,7 +91,7 @@ const getOperatorCode = (operator: string): string => {
 };
 
 function newline(): void {
-    assemblyCode += "\n";
+    assemblyCode += '\n';
 }
 
 export { generateAssemblyCode };

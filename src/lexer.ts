@@ -1,16 +1,16 @@
 export enum TokenType {
-    IntKeyword = "INT_KEYWORD",
-    Identifier = "IDENTIFIER",
-    Equal = "EQUAL",
-    Semicolon = "SEMICOLON",
-    IntLiteral = "INT_LITERAL",
-    Plus = "PLUS",
-    Minus = "MINUS",
-    LeftBrace = "LEFT_BRACE",
-    RightBrace = "RIGHT_BRACE",
-    ReturnKeyword = "RETURN_KEYWORD",
-    LeftParen = "LEFT_PAREN",
-    RightParen = "RIGHT_PAREN",
+    IntKeyword = 'INT_KEYWORD',
+    Identifier = 'IDENTIFIER',
+    Equal = 'EQUAL',
+    Semicolon = 'SEMICOLON',
+    IntLiteral = 'INT_LITERAL',
+    Plus = 'PLUS',
+    Minus = 'MINUS',
+    LeftBrace = 'LEFT_BRACE',
+    RightBrace = 'RIGHT_BRACE',
+    ReturnKeyword = 'RETURN_KEYWORD',
+    LeftParen = 'LEFT_PAREN',
+    RightParen = 'RIGHT_PAREN',
 }
 
 export interface Token {
@@ -19,50 +19,50 @@ export interface Token {
 }
 
 export function tokenize(code: string): Token[] {
-    const keywords = new Set(["int"]);
+    const keywords = new Set(['int']);
 
     const tokens: Token[] = [];
     let cursor = 0;
 
     while (cursor < code.length) {
-        let char = code[cursor];
+        const char = code[cursor];
 
-        if (char === " " || char === "\n") {
+        if (char === ' ' || char === '\n') {
             cursor++;
             continue;
         }
 
-        if (char === "=") {
+        if (char === '=') {
             tokens.push({ type: TokenType.Equal, value: char });
             cursor++;
             continue;
         }
 
-        if (char === ";") {
+        if (char === ';') {
             tokens.push({ type: TokenType.Semicolon, value: char });
             cursor++;
             continue;
         }
 
-        if (char === "{") {
+        if (char === '{') {
             tokens.push({ type: TokenType.LeftBrace, value: char });
             cursor++;
             continue;
         }
 
-        if (char === "}") {
+        if (char === '}') {
             tokens.push({ type: TokenType.RightBrace, value: char });
             cursor++;
             continue;
         }
 
-        if (char === "(") {
+        if (char === '(') {
             tokens.push({ type: TokenType.LeftParen, value: char });
             cursor++;
             continue;
         }
 
-        if (char === ")") {
+        if (char === ')') {
             tokens.push({ type: TokenType.RightParen, value: char });
             cursor++;
             continue;
@@ -77,8 +77,11 @@ export function tokenize(code: string): Token[] {
 
             if (keywords.has(identifier)) {
                 tokens.push({ type: TokenType.IntKeyword, value: identifier });
-            } else if (identifier === "return") {
-                tokens.push({ type: TokenType.ReturnKeyword, value: identifier });
+            } else if (identifier === 'return') {
+                tokens.push({
+                    type: TokenType.ReturnKeyword,
+                    value: identifier,
+                });
             } else {
                 tokens.push({ type: TokenType.Identifier, value: identifier });
             }
