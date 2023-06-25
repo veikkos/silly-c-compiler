@@ -3,6 +3,7 @@ import { ASTNode, FunctionDeclarationNode } from './ast';
 let assemblyCode = '';
 
 function generateAssemblyCode(ast: ASTNode): string {
+    assemblyCode = '';
     generateProgram(ast);
     return assemblyCode;
 }
@@ -37,7 +38,7 @@ function generateStatement(node: ASTNode): void {
 
         case 'Assignment':
             assemblyCode += 'mov ';
-            assemblyCode += node.identifier.value;
+            generateExpression(node.identifier);
             assemblyCode += ', ';
             generateExpression(node.value);
             newline();
@@ -90,9 +91,9 @@ const getOperatorCode = (operator: string): string => {
         case '-':
             return 'sub';
         case '*':
-            return 'mul';
+            return 'imul';
         case '/':
-            return 'div';
+            return 'idiv';
         default:
             throw new Error(`Unsupported operator: ${operator}`);
     }
