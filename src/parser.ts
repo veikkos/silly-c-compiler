@@ -87,12 +87,13 @@ function parseReturnStatement(): ReturnStatementNode {
 function parseExpression(): ASTNode {
     let node = parseTerm();
 
-    while (tokens[cursor].type === TokenType.Plus) {
-        match(TokenType.Plus);
+    while (tokens[cursor].type === TokenType.Plus || tokens[cursor].type === TokenType.Minus) {
+        const operator = tokens[cursor].type;
+        match(operator);
 
         const binaryExpressionNode: BinaryExpressionNode = {
             type: "BinaryExpression",
-            operator: "+",
+            operator: getOperatorSymbol(operator),
             left: node,
             right: parseTerm(),
         };
@@ -101,6 +102,17 @@ function parseExpression(): ASTNode {
     }
 
     return node;
+}
+
+function getOperatorSymbol(tokenType: TokenType): string {
+    switch (tokenType) {
+        case TokenType.Plus:
+            return "+";
+        case TokenType.Minus:
+            return "-";
+        default:
+            throw new Error(`Unsupported operator: ${tokenType}`);
+    }
 }
 
 function parseTerm(): ASTNode {

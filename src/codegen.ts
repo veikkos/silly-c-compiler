@@ -66,7 +66,7 @@ function generateExpression(node: ASTNode): void {
 
         case "BinaryExpression":
             generateExpression(node.left);
-            assemblyCode += ` + `;
+            assemblyCode += ` ${getOperatorCode(node.operator)} `;
             generateExpression(node.right);
             break;
 
@@ -74,6 +74,21 @@ function generateExpression(node: ASTNode): void {
             throw new Error(`Unsupported expression type: ${node.type}`);
     }
 }
+
+const getOperatorCode = (operator: string): string => {
+    switch (operator) {
+        case '+':
+            return 'add';
+        case '-':
+            return 'sub';
+        case '*':
+            return 'mul';
+        case '/':
+            return 'div';
+        default:
+            throw new Error(`Unsupported operator: ${operator}`);
+    }
+};
 
 function newline(): void {
     assemblyCode += "\n";

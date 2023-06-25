@@ -5,6 +5,7 @@ export enum TokenType {
     Semicolon = "SEMICOLON",
     IntLiteral = "INT_LITERAL",
     Plus = "PLUS",
+    Minus = "MINUS",
     LeftBrace = "LEFT_BRACE",
     RightBrace = "RIGHT_BRACE",
     ReturnKeyword = "RETURN_KEYWORD",
@@ -19,8 +20,6 @@ export interface Token {
 
 export function tokenize(code: string): Token[] {
     const keywords = new Set(["int"]);
-    const operators = new Set(["=", "+"]);
-    const punctuation = new Set([";", "{", "}", "(", ")"]);
 
     const tokens: Token[] = [];
     let cursor = 0;
@@ -98,8 +97,14 @@ export function tokenize(code: string): Token[] {
             continue;
         }
 
-        if (operators.has(char)) {
+        if (char === '+') {
             tokens.push({ type: TokenType.Plus, value: char });
+            cursor++;
+            continue;
+        }
+
+        if (char === '-') {
+            tokens.push({ type: TokenType.Minus, value: char });
             cursor++;
             continue;
         }
