@@ -1,5 +1,7 @@
 # Silly ChatGPT C compiler written in TypeScript
 
+[![Build](https://github.com/veikkos/silly-chatgpt-c-compiler/actions/workflows/build.yml/badge.svg)](https://github.com/veikkos/silly-chatgpt-c-compiler/actions/workflows/build.yml)
+
 Messing around with ChatGPT and TypeScript. This is a very simple C compiler that compiles a very simple C program into x86 assembly code.
 
 ## Usage
