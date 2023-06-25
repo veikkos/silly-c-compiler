@@ -6,6 +6,8 @@ export enum TokenType {
     IntLiteral = 'INT_LITERAL',
     Plus = 'PLUS',
     Minus = 'MINUS',
+    Multiply = 'MULTIPLY',
+    Divide = 'DIVIDE',
     LeftBrace = 'LEFT_BRACE',
     RightBrace = 'RIGHT_BRACE',
     ReturnKeyword = 'RETURN_KEYWORD',
@@ -108,6 +110,18 @@ export function tokenize(code: string): Token[] {
 
         if (char === '-') {
             tokens.push({ type: TokenType.Minus, value: char });
+            cursor++;
+            continue;
+        }
+
+        if (char === '*') {
+            tokens.push({ type: TokenType.Multiply, value: char });
+            cursor++;
+            continue;
+        }
+
+        if (char === '/') {
+            tokens.push({ type: TokenType.Divide, value: char });
             cursor++;
             continue;
         }

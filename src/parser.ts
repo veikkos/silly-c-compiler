@@ -93,7 +93,9 @@ function parseExpression(): ASTNode {
 
     while (
         tokens[cursor].type === TokenType.Plus ||
-        tokens[cursor].type === TokenType.Minus
+        tokens[cursor].type === TokenType.Minus ||
+        tokens[cursor].type === TokenType.Multiply ||
+        tokens[cursor].type === TokenType.Divide
     ) {
         const operator = tokens[cursor].type;
         match(operator);
@@ -117,6 +119,10 @@ function getOperatorSymbol(tokenType: TokenType): string {
             return '+';
         case TokenType.Minus:
             return '-';
+        case TokenType.Multiply:
+            return '*';
+        case TokenType.Divide:
+            return '/';
         default:
             throw new Error(`Unsupported operator: ${tokenType}`);
     }
