@@ -3,6 +3,7 @@ export type ASTNode =
     | LiteralNode
     | BinaryExpressionNode
     | VariableDeclarationNode
+    | AssignmentNode
     | ReturnStatementNode
     | FunctionDeclarationNode;
 
@@ -25,6 +26,12 @@ export interface BinaryExpressionNode {
 
 export interface VariableDeclarationNode {
     type: 'VariableDeclaration';
+    identifier: IdentifierNode;
+    value: ASTNode;
+}
+
+export interface AssignmentNode {
+    type: 'Assignment';
     identifier: IdentifierNode;
     value: ASTNode;
 }

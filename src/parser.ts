@@ -49,9 +49,24 @@ function parseStatement(): ASTNode {
         return parseVariableDeclaration();
     } else if (tokens[cursor].type === TokenType.ReturnKeyword) {
         return parseReturnStatement();
+    } else if (tokens[cursor].type === TokenType.Identifier) {
+        return parseAssignment();
     } else {
         throw new Error(`Unexpected token: ${tokens[cursor].type}`);
     }
+}
+
+function parseAssignment(): ASTNode {
+    const identifier = parseIdentifier();
+    match(TokenType.Equal);
+    const value = parseExpression();
+    match(TokenType.Semicolon);
+
+    return {
+        type: 'Assignment',
+        identifier,
+        value,
+    };
 }
 
 function parseVariableDeclaration(): VariableDeclarationNode {

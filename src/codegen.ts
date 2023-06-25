@@ -35,6 +35,14 @@ function generateStatement(node: ASTNode): void {
             newline();
             break;
 
+        case 'Assignment':
+            assemblyCode += 'mov ';
+            assemblyCode += node.identifier.value;
+            assemblyCode += ', ';
+            generateExpression(node.value);
+            newline();
+            break;
+
         case 'ReturnStatement':
             assemblyCode += 'mov ax, ';
             generateExpression(node.argument);

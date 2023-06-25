@@ -3,6 +3,7 @@ int main() {
     int b = 10;
     int c = 1;
     int sum = a + b;
-    int another = sum - c;
-    return another;
+    int another = sum / c;
+    a = another;
+    return a;
 }
