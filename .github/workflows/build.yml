@@ -66,6 +66,9 @@ jobs:
             - name: Build
               run: npm run build
 
+            - name: Compile
+              run: npm run start input.c
+
             - name: Assemble and Link
               run: |
                   nasm -f elf32 input.asm -o input.o
