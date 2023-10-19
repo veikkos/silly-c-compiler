@@ -22,7 +22,10 @@ jobs:
                   node-version: 16
 
             - name: Install dependencies
-              run: npm ci
+              run: |
+                sudo apt-get update
+                sudo apt-get install -y nasm gcc-multilib
+                npm ci
 
             - name: Run linting
               run: npm run lint
@@ -32,3 +35,16 @@ jobs:
 
             - name: Build
               run: npm run build
+
+            - name: Assemble and Link
+              run: |
+                nasm -f elf32 input.asm -o input.o
+                gcc -m32 -o output input.o
+
+            - name: Run the executable
+              run: |
+                ./output
+                if [[ $? -ne 5 ]]; then
+                  echo "Unexpected return value from the executable"
+                  exit 1
+                fi
