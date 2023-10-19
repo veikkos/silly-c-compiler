@@ -76,6 +76,7 @@ jobs:
 
             - name: Run the executable
               run: |
+                  set +e
                   ./output
                   RETURN_VALUE=$?
                   if [[ $RETURN_VALUE -ne 15 ]]; then
