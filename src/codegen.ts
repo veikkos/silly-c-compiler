@@ -62,10 +62,10 @@ function generateExpression(node: ASTNode): void {
             break;
 
         case 'BinaryExpression':
-            generateExpression(node.left);
-            assemblyCode += `push eax\n`; // Push the result of the left-hand side to the stack
-            generateExpression(node.right);
-            assemblyCode += `pop ebx\n`; // Pop the result of the left-hand side to ebx
+            generateExpression(node.right); // Evaluate the right-hand side first
+            assemblyCode += `push eax\n`; // Push the result of the right-hand side to the stack
+            generateExpression(node.left); // Then, evaluate the left-hand side
+            assemblyCode += `pop ebx\n`; // Pop the result of the right-hand side to ebx
             assemblyCode += getBinaryOperation(node.operator);
             break;
 
