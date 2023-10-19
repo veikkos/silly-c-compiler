@@ -77,7 +77,8 @@ jobs:
             - name: Run the executable
               run: |
                   ./output
-                  if [[ $? -ne 15 ]]; then
-                    echo "Unexpected return value from the executable"
+                  RETURN_VALUE=$?
+                  if [[ $RETURN_VALUE -ne 15 ]]; then
+                    echo "Unexpected return value from the executable: $RETURN_VALUE"
                     exit 1
                   fi
