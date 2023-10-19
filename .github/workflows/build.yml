@@ -73,7 +73,6 @@ jobs:
               run: |
                   nasm -f elf32 input.asm -o input.o
                   gcc -m32 -o output input.o
-                  objdump -d ./output
 
             - name: Run the executable
               run: |
@@ -83,3 +82,4 @@ jobs:
                     echo "Unexpected return value from the executable: $RETURN_VALUE"
                     exit 1
                   fi
+                  exit 0

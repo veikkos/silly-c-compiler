@@ -44,9 +44,9 @@ a dd 3
 section .text
 global main
 main:
-mov eax, [a]
-push eax
 mov eax, 10
+push eax
+mov eax, [a]
 pop ebx
 add eax, ebx
 ret
