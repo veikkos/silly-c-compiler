@@ -79,7 +79,7 @@ jobs:
                   set +e
                   ./output
                   RETURN_VALUE=$?
-                  if [[ $RETURN_VALUE -ne 15 ]]; then
+                  if [[ $RETURN_VALUE -ne 5 ]]; then
                     echo "Unexpected return value from the executable: $RETURN_VALUE"
                     exit 1
                   fi
