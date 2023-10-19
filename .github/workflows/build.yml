@@ -9,6 +9,42 @@ on:
             - main
 
 jobs:
+    lint:
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v2
+
+            - name: Set up Node.js
+              uses: actions/setup-node@v2
+              with:
+                  node-version: 16
+
+            - name: Install npm dependencies
+              run: npm ci
+
+            - name: Run linting
+              run: npm run lint
+
+    test:
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v2
+
+            - name: Set up Node.js
+              uses: actions/setup-node@v2
+              with:
+                  node-version: 16
+
+            - name: Install npm dependencies
+              run: npm ci
+
+            - name: Run tests
+              run: npm test
+
     build:
         runs-on: ubuntu-latest
 
@@ -23,28 +59,22 @@ jobs:
 
             - name: Install dependencies
               run: |
-                sudo apt-get update
-                sudo apt-get install -y nasm gcc-multilib
-                npm ci
-
-            - name: Run linting
-              run: npm run lint
-
-            - name: Run tests
-              run: npm test
+                  sudo apt-get update
+                  sudo apt-get install -y nasm gcc-multilib
+                  npm ci
 
             - name: Build
               run: npm run build
 
             - name: Assemble and Link
               run: |
-                nasm -f elf32 input.asm -o input.o
-                gcc -m32 -o output input.o
+                  nasm -f elf32 input.asm -o input.o
+                  gcc -m32 -o output input.o
 
             - name: Run the executable
               run: |
-                ./output
-                if [[ $? -ne 5 ]]; then
-                  echo "Unexpected return value from the executable"
-                  exit 1
-                fi
+                  ./output
+                  if [[ $? -ne 5 ]]; then
+                    echo "Unexpected return value from the executable"
+                    exit 1
+                  fi
