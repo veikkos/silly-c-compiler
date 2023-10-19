@@ -1,4 +1,5 @@
-import { readFileSync } from 'fs';
+import { readFileSync, writeFileSync } from 'fs';
+import { parse as p } from 'path';
 import { tokenize } from './lexer';
 import { parse } from './parser';
 import { performSemanticAnalysis } from './semantic';
@@ -24,3 +25,7 @@ const assemblyCode = generateAssemblyCode(ast);
 
 console.log('Generated Assembly Code:');
 console.log(assemblyCode);
+
+const outputFileName = `${p(fileName).name}.asm`;
+console.log(`Writing to ${outputFileName}`);
+writeFileSync(outputFileName, assemblyCode, 'utf8');

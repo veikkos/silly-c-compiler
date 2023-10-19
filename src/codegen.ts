@@ -1,55 +1,45 @@
 import { ASTNode, FunctionDeclarationNode } from './ast';
 
 let assemblyCode = '';
+let dataSegment = 'section .data\n';
 
 function generateAssemblyCode(ast: ASTNode): string {
     assemblyCode = '';
     generateProgram(ast);
-    return assemblyCode;
+    return dataSegment + 'section .text\nglobal main\n' + assemblyCode;
 }
 
 function generateProgram(node: ASTNode): void {
     if (node.type !== 'FunctionDeclaration') {
         throw new Error('Program must contain a function declaration');
     }
-
     generateFunctionDeclaration(node);
 }
 
 function generateFunctionDeclaration(node: FunctionDeclarationNode): void {
-    if (node.identifier.type !== 'Identifier') {
-        throw new Error('Function declaration must have an identifier');
+    if (node.type !== 'FunctionDeclaration') {
+        throw new Error('Program must contain a function declaration');
     }
-
-    assemblyCode += `${node.identifier.value}:`;
-    newline();
-
+    assemblyCode += `${node.identifier.value}:\n`;
     node.body.forEach(generateStatement);
 }
 
 function generateStatement(node: ASTNode): void {
     switch (node.type) {
         case 'VariableDeclaration':
-            generateExpression(node.identifier);
-            assemblyCode += ' dw ';
+            dataSegment += `${node.identifier.value} dd 0\n`;
             generateExpression(node.value);
-            newline();
+            assemblyCode += `mov [${node.identifier.value}], eax\n`;
             break;
 
         case 'Assignment':
-            assemblyCode += 'mov ';
-            generateExpression(node.identifier);
-            assemblyCode += ', ';
             generateExpression(node.value);
-            newline();
+            assemblyCode += `mov [${node.identifier.value}], eax\n`;
             break;
 
         case 'ReturnStatement':
-            assemblyCode += 'mov ax, ';
             generateExpression(node.argument);
-            newline();
-            assemblyCode += 'ret';
-            newline();
+            assemblyCode += 'ret\n';
             break;
 
         default:
@@ -60,23 +50,19 @@ function generateStatement(node: ASTNode): void {
 function generateExpression(node: ASTNode): void {
     switch (node.type) {
         case 'Identifier':
-            if (node.type !== 'Identifier') {
-                throw new Error('Identifier node must have a value');
-            }
-            assemblyCode += node.value;
+            assemblyCode += `mov eax, [${node.value}]\n`;
             break;
 
         case 'Literal':
-            if (node.type !== 'Literal') {
-                throw new Error('Literal node must have a value');
-            }
-            assemblyCode += node.value;
+            assemblyCode += `mov eax, ${node.value}\n`;
             break;
 
         case 'BinaryExpression':
             generateExpression(node.left);
-            assemblyCode += ` ${getOperatorCode(node.operator)} `;
+            assemblyCode += `push eax\n`; // Push the result of the left-hand side to the stack
             generateExpression(node.right);
+            assemblyCode += `pop ebx\n`; // Pop the result of the left-hand side to ebx
+            assemblyCode += getBinaryOperation(node.operator);
             break;
 
         default:
@@ -84,23 +70,19 @@ function generateExpression(node: ASTNode): void {
     }
 }
 
-const getOperatorCode = (operator: string): string => {
+const getBinaryOperation = (operator: string): string => {
     switch (operator) {
         case '+':
-            return 'add';
+            return 'add eax, ebx\n';
         case '-':
-            return 'sub';
+            return 'sub eax, ebx\n';
         case '*':
-            return 'imul';
+            return 'imul eax, ebx\n';
         case '/':
-            return 'idiv';
+            return 'xor edx, edx\nidiv ebx\n'; // Note that the divisor is now in ebx
         default:
             throw new Error(`Unsupported operator: ${operator}`);
     }
 };
-
-function newline(): void {
-    assemblyCode += '\n';
-}
 
 export { generateAssemblyCode };
