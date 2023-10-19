@@ -27,9 +27,13 @@ function generateFunctionDeclaration(node: FunctionDeclarationNode): void {
 function generateStatement(node: ASTNode): void {
     switch (node.type) {
         case 'VariableDeclaration':
-            dataSegment += `${node.identifier.value} dd 0\n`;
-            generateExpression(node.value);
-            assemblyCode += `mov [${node.identifier.value}], eax\n`;
+            if (node.value.type === 'Literal') {
+                dataSegment += `${node.identifier.value} dd ${node.value.value}\n`;
+            } else {
+                dataSegment += `${node.identifier.value} dd 0\n`;
+                generateExpression(node.value);
+                assemblyCode += `mov [${node.identifier.value}], eax\n`;
+            }
             break;
 
         case 'Assignment':
