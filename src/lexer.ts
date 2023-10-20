@@ -13,6 +13,7 @@ export enum TokenType {
     ReturnKeyword = 'RETURN_KEYWORD',
     LeftParen = 'LEFT_PAREN',
     RightParen = 'RIGHT_PAREN',
+    Comma = 'COMMA',
 }
 
 export interface Token {
@@ -66,6 +67,12 @@ export function tokenize(code: string): Token[] {
 
         if (char === ')') {
             tokens.push({ type: TokenType.RightParen, value: char });
+            cursor++;
+            continue;
+        }
+
+        if (char === ',') {
+            tokens.push({ type: TokenType.Comma, value: char });
             cursor++;
             continue;
         }

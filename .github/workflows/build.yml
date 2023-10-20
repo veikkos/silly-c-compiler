@@ -2,8 +2,6 @@ name: Build
 
 on:
     push:
-        branches:
-            - main
     pull_request:
         branches:
             - main
@@ -67,20 +65,30 @@ jobs:
               run: npm run build
 
             - name: Compile
-              run: npm run start input.c
+              run: |
+                  npm run start tests/inputs/simple.c
+                  npm run start tests/inputs/fn.c
 
             - name: Assemble and Link
               run: |
-                  nasm -f elf32 input.asm -o input.o
-                  gcc -m32 -o output input.o
+                  nasm -f elf32 simple.asm -o simple.o
+                  gcc -m32 -o simple simple.o
+                  nasm -f elf32 fn.asm -o fn.o
+                  gcc -m32 -o fn fn.o
 
-            - name: Run the executable
+            - name: Run the executables
               run: |
                   set +e
-                  ./output
+                  ./simple
                   RETURN_VALUE=$?
                   if [[ $RETURN_VALUE -ne 5 ]]; then
                     echo "Unexpected return value from the executable: $RETURN_VALUE"
                     exit 1
+                  fi
+                  ./fn
+                  RETURN_VALUE=$?
+                  if [[ $RETURN_VALUE -ne 5 ]]; then
+                    echo "Unexpected return value from the executable: $RETURN_VALUE"
+                    exit 2
                   fi
                   exit 0

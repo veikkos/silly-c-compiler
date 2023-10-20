@@ -7,27 +7,58 @@ import {
     ReturnStatementNode,
     FunctionDeclarationNode,
     BinaryExpressionNode,
+    ParameterNode,
+    AssignmentNode,
+    FunctionCallNode,
 } from './ast';
 
 let tokens: Token[] = [];
 let cursor = 0;
 
-export function parse(tokenList: Token[]): ASTNode {
+export function parse(tokenList: Token[]): ASTNode[] {
     tokens = tokenList;
     cursor = 0;
 
+    const astNodes: ASTNode[] = [];
+
+    while (cursor < tokens.length) {
+        const functionNode = parseFunctionDeclaration();
+        astNodes.push(functionNode);
+    }
+
+    return astNodes;
+}
+
+function parseFunctionDeclaration(): FunctionDeclarationNode {
     match(TokenType.IntKeyword);
     const identifier = parseIdentifier();
-    match(TokenType.LeftParen);
-    match(TokenType.RightParen);
+    const parameters = parseParameters();
+    const body = parseBlock();
 
-    const programNode: FunctionDeclarationNode = {
+    return {
         type: 'FunctionDeclaration',
         identifier,
-        body: parseBlock(),
+        parameters,
+        body,
     };
+}
 
-    return programNode;
+function parseParameters(): ParameterNode[] {
+    const params: ParameterNode[] = [];
+    match(TokenType.LeftParen);
+
+    while (tokens[cursor].type !== TokenType.RightParen) {
+        match(TokenType.IntKeyword);
+        const paramIdentifier = parseIdentifier();
+        params.push({ type: 'Parameter', identifier: paramIdentifier });
+
+        if (tokens[cursor].type === TokenType.Comma) {
+            match(TokenType.Comma);
+        }
+    }
+
+    match(TokenType.RightParen);
+    return params;
 }
 
 function parseBlock(): ASTNode[] {
@@ -50,23 +81,54 @@ function parseStatement(): ASTNode {
     } else if (tokens[cursor].type === TokenType.ReturnKeyword) {
         return parseReturnStatement();
     } else if (tokens[cursor].type === TokenType.Identifier) {
-        return parseAssignment();
+        return parseFunctionCallOrAssignment();
     } else {
         throw new Error(`Unexpected token: ${tokens[cursor].type}`);
     }
 }
 
-function parseAssignment(): ASTNode {
+function parseFunctionCallOrAssignment(): ASTNode {
     const identifier = parseIdentifier();
-    match(TokenType.Equal);
-    const value = parseExpression();
-    match(TokenType.Semicolon);
 
-    return {
-        type: 'Assignment',
-        identifier,
-        value,
-    };
+    if (tokens[cursor].type === TokenType.LeftParen) {
+        const args = parseArguments();
+        match(TokenType.Semicolon);
+        return {
+            type: 'FunctionCall',
+            identifier,
+            arguments: args,
+        };
+    } else if (tokens[cursor].type === TokenType.Equal) {
+        match(TokenType.Equal);
+        const value = parseExpression();
+        match(TokenType.Semicolon);
+
+        return {
+            type: 'Assignment',
+            identifier,
+            value,
+        };
+    } else {
+        throw new Error(
+            `Unexpected token after identifier: ${tokens[cursor].type}`,
+        );
+    }
+}
+
+function parseArguments(): ASTNode[] {
+    const args: ASTNode[] = [];
+    match(TokenType.LeftParen);
+
+    while (tokens[cursor].type !== TokenType.RightParen) {
+        args.push(parseExpression());
+
+        if (tokens[cursor].type === TokenType.Comma) {
+            match(TokenType.Comma);
+        }
+    }
+
+    match(TokenType.RightParen);
+    return args;
 }
 
 function parseVariableDeclaration(): VariableDeclarationNode {
@@ -144,7 +206,12 @@ function getOperatorSymbol(tokenType: TokenType): string {
 }
 
 function parseTerm(): ASTNode {
-    if (tokens[cursor].type === TokenType.Identifier) {
+    if (
+        tokens[cursor].type === TokenType.Identifier &&
+        tokens[cursor + 1].type === TokenType.LeftParen
+    ) {
+        return parseFunctionCall();
+    } else if (tokens[cursor].type === TokenType.Identifier) {
         return parseIdentifier();
     } else if (tokens[cursor].type === TokenType.IntLiteral) {
         return parseLiteral();
@@ -166,6 +233,25 @@ function parseLiteral(): LiteralNode {
     return {
         type: 'Literal',
         value: token.value,
+    };
+}
+
+function parseFunctionCall(): FunctionCallNode {
+    const identifier = parseIdentifier();
+    match(TokenType.LeftParen);
+    const args: ASTNode[] = [];
+    while (tokens[cursor].type !== TokenType.RightParen) {
+        args.push(parseExpression());
+        if (tokens[cursor].type === TokenType.Comma) {
+            match(TokenType.Comma);
+        }
+    }
+    match(TokenType.RightParen);
+
+    return {
+        type: 'FunctionCall',
+        identifier,
+        arguments: args,
     };
 }
 

@@ -1,6 +1,6 @@
 import { ASTNode } from './ast';
 
-export function performSemanticAnalysis(ast: ASTNode): void {
+export function performSemanticAnalysis(asts: ASTNode[]): void {
     function traverse(node: ASTNode): void {
         switch (node.type) {
             case 'BinaryExpression':
@@ -23,15 +23,20 @@ export function performSemanticAnalysis(ast: ASTNode): void {
                 node.body.forEach(traverse);
                 break;
 
+            case 'FunctionCall':
+                traverse(node.identifier);
+                node.arguments.forEach(traverse);
+                break;
+
             case 'Identifier':
             case 'Literal':
                 // No semantic analysis needed for identifiers and literals
                 break;
 
             default:
-                throw new Error(`Unsupported node type: ${node}`);
+                throw new Error(`Unsupported node type: ${(node as any).type}`);
         }
     }
 
-    traverse(ast);
+    asts.forEach(traverse);
 }

@@ -5,7 +5,9 @@ export type ASTNode =
     | VariableDeclarationNode
     | AssignmentNode
     | ReturnStatementNode
-    | FunctionDeclarationNode;
+    | FunctionDeclarationNode
+    | ParameterNode
+    | FunctionCallNode;
 
 export interface IdentifierNode {
     type: 'Identifier';
@@ -44,5 +46,17 @@ export interface ReturnStatementNode {
 export interface FunctionDeclarationNode {
     type: 'FunctionDeclaration';
     identifier: IdentifierNode;
+    parameters: ParameterNode[];
     body: ASTNode[];
+}
+
+export interface ParameterNode {
+    type: 'Parameter';
+    identifier: IdentifierNode;
+}
+
+export interface FunctionCallNode {
+    type: 'FunctionCall';
+    identifier: IdentifierNode;
+    arguments: ASTNode[];
 }
