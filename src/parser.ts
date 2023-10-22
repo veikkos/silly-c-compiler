@@ -1,4 +1,4 @@
-import { Token, TokenType } from './lexer';
+import { Token, TokenType } from './tokenizer';
 import {
     ASTNode,
     IdentifierNode,

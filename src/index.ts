@@ -1,6 +1,6 @@
 import { readFileSync, writeFileSync } from 'fs';
 import { parse as p } from 'path';
-import { tokenize } from './lexer';
+import { tokenize } from './tokenizer';
 import { parse } from './parser';
 import { performSemanticAnalysis } from './semantic';
 import { generateAssemblyCode } from './codegen';

@@ -1,4 +1,4 @@
-import { Token, TokenType } from '../src/lexer';
+import { Token, TokenType } from '../src/tokenizer';
 import { ASTNode, FunctionDeclarationNode } from '../src/ast';
 import { parse } from '../src/parser';
 

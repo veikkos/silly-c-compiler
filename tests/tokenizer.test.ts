@@ -1,4 +1,4 @@
-import { tokenize, Token, TokenType } from '../src/lexer';
+import { tokenize, Token, TokenType } from '../src/tokenizer';
 
 describe('tokenize', () => {
     test('should tokenize a simple C code', () => {
