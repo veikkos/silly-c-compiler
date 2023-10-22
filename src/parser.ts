@@ -8,7 +8,6 @@ import {
     FunctionDeclarationNode,
     BinaryExpressionNode,
     ParameterNode,
-    AssignmentNode,
     FunctionCallNode,
 } from './ast';
 

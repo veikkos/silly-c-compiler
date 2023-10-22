@@ -34,7 +34,7 @@ export function performSemanticAnalysis(asts: ASTNode[]): void {
                 break;
 
             default:
-                throw new Error(`Unsupported node type: ${(node as any).type}`);
+                throw new Error(`Unsupported node type: ${node.type}`);
         }
     }
 
