@@ -1,9 +1,6 @@
 import { readFileSync, writeFileSync } from 'fs';
 import { parse as p } from 'path';
-import { tokenize } from './tokenizer';
-import { parse } from './parser';
-import { performSemanticAnalysis } from './semantic';
-import { generateAssemblyCode } from './codegen';
+import { compile } from './silly';
 
 // Get the filename from the command line arguments
 const fileName = process.argv[2];
@@ -17,11 +14,7 @@ if (!fileName) {
 
 // Read the input C code from the file
 const code = readFileSync(fileName, 'utf8');
-
-const tokens = tokenize(code);
-const ast = parse(tokens);
-performSemanticAnalysis(ast);
-const assemblyCode = generateAssemblyCode(ast);
+const assemblyCode = compile(code);
 
 console.log('Generated Assembly Code:');
 console.log(assemblyCode);
