@@ -13,28 +13,40 @@ import {
     UnaryExpressionNode,
 } from './ast';
 
-let tokens: Token[] = [];
-let cursor = 0;
+class ParserContext {
+    tokens: Token[];
+    cursor: number;
+
+    constructor(tokens: Token[]) {
+        this.tokens = tokens;
+        this.cursor = 0;
+    }
+
+    currentToken(): Token {
+        return this.tokens[this.cursor];
+    }
+}
 
 export function parse(tokenList: Token[]): ASTNode[] {
-    tokens = tokenList;
-    cursor = 0;
+    const context = new ParserContext(tokenList);
 
     const astNodes: ASTNode[] = [];
 
-    while (cursor < tokens.length) {
-        const functionNode = parseFunctionDeclaration();
+    while (context.cursor < context.tokens.length) {
+        const functionNode = parseFunctionDeclaration(context);
         astNodes.push(functionNode);
     }
 
     return astNodes;
 }
 
-function parseFunctionDeclaration(): FunctionDeclarationNode {
-    match(TokenType.IntKeyword);
-    const identifier = parseIdentifier();
-    const parameters = parseParameters();
-    const body = parseBlock();
+function parseFunctionDeclaration(
+    context: ParserContext,
+): FunctionDeclarationNode {
+    match(context, TokenType.IntKeyword);
+    const identifier = parseIdentifier(context);
+    const parameters = parseParameters(context);
+    const body = parseBlock(context);
 
     return {
         type: 'FunctionDeclaration',
@@ -44,86 +56,93 @@ function parseFunctionDeclaration(): FunctionDeclarationNode {
     };
 }
 
-function parseParameters(): ParameterNode[] {
+function parseParameters(context: ParserContext): ParameterNode[] {
     const params: ParameterNode[] = [];
-    match(TokenType.LeftParen);
+    match(context, TokenType.LeftParen);
 
-    while (tokens[cursor].type !== TokenType.RightParen) {
-        match(TokenType.IntKeyword);
-        const paramIdentifier = parseIdentifier();
+    while (context.currentToken().type !== TokenType.RightParen) {
+        match(context, TokenType.IntKeyword);
+        const paramIdentifier = parseIdentifier(context);
         params.push({ type: 'Parameter', identifier: paramIdentifier });
 
-        if (tokens[cursor].type === TokenType.Comma) {
-            match(TokenType.Comma);
+        if (context.currentToken().type === TokenType.Comma) {
+            match(context, TokenType.Comma);
         }
     }
 
-    match(TokenType.RightParen);
+    match(context, TokenType.RightParen);
     return params;
 }
 
-function parseBlock(): ASTNode[] {
+function parseBlock(context: ParserContext): ASTNode[] {
     const block: ASTNode[] = [];
 
-    match(TokenType.LeftBrace);
+    match(context, TokenType.LeftBrace);
 
-    while (tokens[cursor].type !== TokenType.RightBrace) {
-        block.push(parseStatement());
+    while (context.currentToken().type !== TokenType.RightBrace) {
+        block.push(parseStatement(context));
     }
 
-    match(TokenType.RightBrace);
+    match(context, TokenType.RightBrace);
 
     return block;
 }
 
-function parseStatement(): ASTNode {
-    if (tokens[cursor].type === TokenType.IntKeyword) {
-        return parseVariableDeclaration();
-    } else if (tokens[cursor].type === TokenType.ReturnKeyword) {
-        return parseReturnStatement();
-    } else if (tokens[cursor].type === TokenType.Identifier) {
-        return parseFunctionCallOrAssignment();
-    } else if (tokens[cursor].type === TokenType.IfKeyword) {
-        return parseIfStatement();
-    } else {
-        throw new Error(`Unexpected token: ${tokens[cursor].type}`);
+function parseStatement(context: ParserContext): ASTNode {
+    switch (context.currentToken().type) {
+        case TokenType.IntKeyword:
+            return parseVariableDeclaration(context);
+        case TokenType.ReturnKeyword:
+            return parseReturnStatement(context);
+        case TokenType.Identifier:
+            return parseFunctionCallOrAssignment(context);
+        case TokenType.IfKeyword:
+            return parseIfStatement(context);
+        default:
+            throw new Error(`Unexpected token: ${context.currentToken().type}`);
     }
 }
 
-function parseFunctionCallOrAssignment(): ASTNode {
-    const identifier = parseIdentifier();
+function parseFunctionCallOrAssignment(context: ParserContext): ASTNode {
+    const identifier = parseIdentifier(context);
 
-    if (tokens[cursor].type === TokenType.LeftParen) {
-        const args = parseArguments();
-        match(TokenType.Semicolon);
-        return {
-            type: 'FunctionCall',
-            identifier,
-            arguments: args,
-        };
-    } else if (tokens[cursor].type === TokenType.Equal) {
-        match(TokenType.Equal);
-        const value = parseExpression();
-        match(TokenType.Semicolon);
+    switch (context.currentToken().type) {
+        case TokenType.LeftParen: {
+            const args = parseArguments(context);
+            match(context, TokenType.Semicolon);
+            return {
+                type: 'FunctionCall',
+                identifier,
+                arguments: args,
+            };
+        }
 
-        return {
-            type: 'Assignment',
-            identifier,
-            value,
-        };
-    } else {
-        throw new Error(
-            `Unexpected token after identifier: ${tokens[cursor].type}`,
-        );
+        case TokenType.Equal: {
+            match(context, TokenType.Equal);
+            const value = parseExpression(context);
+            match(context, TokenType.Semicolon);
+            return {
+                type: 'Assignment',
+                identifier,
+                value,
+            };
+        }
+
+        default:
+            throw new Error(
+                `Unexpected token after identifier: ${
+                    context.currentToken().type
+                }`,
+            );
     }
 }
 
-function parseIfStatement(): IfStatementNode {
-    match(TokenType.IfKeyword);
-    match(TokenType.LeftParen);
-    const condition = parseExpression();
-    match(TokenType.RightParen);
-    const body = parseBlock();
+function parseIfStatement(context: ParserContext): IfStatementNode {
+    match(context, TokenType.IfKeyword);
+    match(context, TokenType.LeftParen);
+    const condition = parseExpression(context);
+    match(context, TokenType.RightParen);
+    const body = parseBlock(context);
 
     return {
         type: 'IfStatement',
@@ -132,33 +151,35 @@ function parseIfStatement(): IfStatementNode {
     };
 }
 
-function parseArguments(): ASTNode[] {
+function parseArguments(context: ParserContext): ASTNode[] {
     const args: ASTNode[] = [];
-    match(TokenType.LeftParen);
+    match(context, TokenType.LeftParen);
 
-    while (tokens[cursor].type !== TokenType.RightParen) {
-        args.push(parseExpression());
+    while (context.currentToken().type !== TokenType.RightParen) {
+        args.push(parseExpression(context));
 
-        if (tokens[cursor].type === TokenType.Comma) {
-            match(TokenType.Comma);
+        if (context.currentToken().type === TokenType.Comma) {
+            match(context, TokenType.Comma);
         }
     }
 
-    match(TokenType.RightParen);
+    match(context, TokenType.RightParen);
     return args;
 }
 
-function parseVariableDeclaration(): VariableDeclarationNode {
-    match(TokenType.IntKeyword);
-    const identifier = parseIdentifier();
+function parseVariableDeclaration(
+    context: ParserContext,
+): VariableDeclarationNode {
+    match(context, TokenType.IntKeyword);
+    const identifier = parseIdentifier(context);
     let value: ASTNode | null = null;
 
-    if (tokens[cursor].type === TokenType.Equal) {
-        match(TokenType.Equal);
-        value = parseExpression();
+    if (context.currentToken().type === TokenType.Equal) {
+        match(context, TokenType.Equal);
+        value = parseExpression(context);
     }
 
-    match(TokenType.Semicolon);
+    match(context, TokenType.Semicolon);
 
     if (!value) {
         throw new Error('Variable declaration must have a value');
@@ -171,10 +192,10 @@ function parseVariableDeclaration(): VariableDeclarationNode {
     };
 }
 
-function parseReturnStatement(): ReturnStatementNode {
-    match(TokenType.ReturnKeyword);
-    const argument = parseExpression();
-    match(TokenType.Semicolon);
+function parseReturnStatement(context: ParserContext): ReturnStatementNode {
+    match(context, TokenType.ReturnKeyword);
+    const argument = parseExpression(context);
+    match(context, TokenType.Semicolon);
 
     return {
         type: 'ReturnStatement',
@@ -182,23 +203,23 @@ function parseReturnStatement(): ReturnStatementNode {
     };
 }
 
-function parseExpression(): ASTNode {
-    let node = parseTerm();
+function parseExpression(context: ParserContext): ASTNode {
+    let node = parseTerm(context);
 
     while (
-        tokens[cursor].type === TokenType.Plus ||
-        tokens[cursor].type === TokenType.Minus ||
-        tokens[cursor].type === TokenType.Multiply ||
-        tokens[cursor].type === TokenType.Divide
+        context.currentToken().type === TokenType.Plus ||
+        context.currentToken().type === TokenType.Minus ||
+        context.currentToken().type === TokenType.Multiply ||
+        context.currentToken().type === TokenType.Divide
     ) {
-        const operator = tokens[cursor].type;
-        match(operator);
+        const operator = context.currentToken().type;
+        match(context, operator);
 
         const binaryExpressionNode: BinaryExpressionNode = {
             type: 'BinaryExpression',
             operator: getOperatorSymbol(operator),
             left: node,
-            right: parseTerm(),
+            right: parseTerm(context),
         };
 
         node = binaryExpressionNode;
@@ -222,72 +243,80 @@ function getOperatorSymbol(tokenType: TokenType): string {
     }
 }
 
-function parseTerm(): ASTNode {
-    if (
-        tokens[cursor].type === TokenType.Identifier &&
-        tokens[cursor + 1].type === TokenType.LeftParen
-    ) {
-        return parseFunctionCall();
-    } else if (tokens[cursor].type === TokenType.Identifier) {
-        return parseIdentifier();
-    } else if (tokens[cursor].type === TokenType.IntLiteral) {
-        return parseLiteral();
-    } else if (
-        tokens[cursor].type === TokenType.Minus &&
-        isExpressionFollowing()
-    ) {
-        return parseUnaryExpression();
-    } else {
-        throw new Error(`Unexpected token: ${tokens[cursor].type}`);
+function parseTerm(context: ParserContext): ASTNode {
+    switch (context.currentToken().type) {
+        case TokenType.Identifier:
+            if (
+                context.tokens[context.cursor + 1].type === TokenType.LeftParen
+            ) {
+                return parseFunctionCall(context);
+            }
+            return parseIdentifier(context);
+
+        case TokenType.IntLiteral:
+            return parseLiteral(context);
+
+        case TokenType.Minus:
+            if (isExpressionFollowing(context)) {
+                return parseUnaryExpression(context);
+            }
+            throw new Error(
+                `Unexpected next token: ${
+                    context.tokens[context.cursor + 1].type
+                }`,
+            );
+
+        default:
+            throw new Error(`Unexpected token: ${context.currentToken().type}`);
     }
 }
 
-function isExpressionFollowing(): boolean {
-    const nextTokenType = tokens[cursor + 1].type;
+function isExpressionFollowing(context: ParserContext): boolean {
+    const nextTokenType = context.tokens[context.cursor + 1].type;
     return (
         nextTokenType === TokenType.IntLiteral ||
         nextTokenType === TokenType.Identifier
     );
 }
 
-function parseUnaryExpression(): UnaryExpressionNode {
-    const operator = tokens[cursor].type;
-    match(operator);
+function parseUnaryExpression(context: ParserContext): UnaryExpressionNode {
+    const operator = context.currentToken().type;
+    match(context, operator);
 
     return {
         type: 'UnaryExpression',
         operator: getOperatorSymbol(operator),
-        operand: parseTerm(),
+        operand: parseTerm(context),
     };
 }
 
-function parseIdentifier(): IdentifierNode {
-    const token = match(TokenType.Identifier);
+function parseIdentifier(context: ParserContext): IdentifierNode {
+    const token = match(context, TokenType.Identifier);
     return {
         type: 'Identifier',
         value: token.value,
     };
 }
 
-function parseLiteral(): LiteralNode {
-    const token = match(TokenType.IntLiteral);
+function parseLiteral(context: ParserContext): LiteralNode {
+    const token = match(context, TokenType.IntLiteral);
     return {
         type: 'Literal',
         value: token.value,
     };
 }
 
-function parseFunctionCall(): FunctionCallNode {
-    const identifier = parseIdentifier();
-    match(TokenType.LeftParen);
+function parseFunctionCall(context: ParserContext): FunctionCallNode {
+    const identifier = parseIdentifier(context);
+    match(context, TokenType.LeftParen);
     const args: ASTNode[] = [];
-    while (tokens[cursor].type !== TokenType.RightParen) {
-        args.push(parseExpression());
-        if (tokens[cursor].type === TokenType.Comma) {
-            match(TokenType.Comma);
+    while (context.currentToken().type !== TokenType.RightParen) {
+        args.push(parseExpression(context));
+        if (context.currentToken().type === TokenType.Comma) {
+            match(context, TokenType.Comma);
         }
     }
-    match(TokenType.RightParen);
+    match(context, TokenType.RightParen);
 
     return {
         type: 'FunctionCall',
@@ -296,11 +325,10 @@ function parseFunctionCall(): FunctionCallNode {
     };
 }
 
-function match(expectedType: TokenType): Token {
-    const token = tokens[cursor];
-
+function match(context: ParserContext, expectedType: TokenType): Token {
+    const token = context.currentToken();
     if (token.type === expectedType) {
-        cursor++;
+        context.cursor++;
         return token;
     } else {
         throw new Error(
