@@ -7,7 +7,8 @@ export type ASTNode =
     | ReturnStatementNode
     | FunctionDeclarationNode
     | ParameterNode
-    | FunctionCallNode;
+    | FunctionCallNode
+    | IfStatementNode;
 
 export interface IdentifierNode {
     type: 'Identifier';
@@ -59,4 +60,10 @@ export interface FunctionCallNode {
     type: 'FunctionCall';
     identifier: IdentifierNode;
     arguments: ASTNode[];
+}
+
+export interface IfStatementNode {
+    type: 'IfStatement';
+    condition: ASTNode;
+    body: ASTNode[];
 }

@@ -68,4 +68,39 @@ ret
         const generatedCode = compile(code);
         expect(generatedCode).toEqual(expectedAssemblyCode);
     });
+
+    test('should compile if.c', () => {
+        const code = readFileSync(`${testFilePath}/if.c`, 'utf8');
+        const expectedAssemblyCode = `section .data
+c dd 0
+section .text
+global main
+main:
+mov eax, [c]
+test eax, eax
+je end_if_0
+mov eax, 9
+push eax
+mov eax, [c]
+pop ebx
+add eax, ebx
+mov [c], eax
+end_if_0:
+mov eax, 1
+test eax, eax
+je end_if_1
+mov eax, 5
+push eax
+mov eax, [c]
+pop ebx
+add eax, ebx
+mov [c], eax
+end_if_1:
+mov eax, [c]
+ret
+`;
+
+        const generatedCode = compile(code);
+        expect(generatedCode).toEqual(expectedAssemblyCode);
+    });
 });

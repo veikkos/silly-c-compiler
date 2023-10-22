@@ -28,6 +28,11 @@ export function performSemanticAnalysis(asts: ASTNode[]): void {
                 node.arguments.forEach(traverse);
                 break;
 
+            case 'IfStatement':
+                traverse(node.condition);
+                node.body.forEach(traverse);
+                break;
+
             case 'Identifier':
             case 'Literal':
                 // No semantic analysis needed for identifiers and literals

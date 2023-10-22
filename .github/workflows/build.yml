@@ -64,31 +64,27 @@ jobs:
             - name: Build
               run: npm run build
 
-            - name: Compile
+            - name: Compile, Assemble, Link, and Run
               run: |
-                  npm run start tests/inputs/simple.c
-                  npm run start tests/inputs/fn.c
+                  INPUTS=("simple" "fn" "if")
 
-            - name: Assemble and Link
-              run: |
-                  nasm -f elf32 simple.asm -o simple.o
-                  gcc -m32 -o simple simple.o
-                  nasm -f elf32 fn.asm -o fn.o
-                  gcc -m32 -o fn fn.o
+                  for FILE in "${INPUTS[@]}"; do
+                      npm run start "tests/inputs/$FILE.c"
+                  done
 
-            - name: Run the executables
-              run: |
+                  for FILE in "${INPUTS[@]}"; do
+                      nasm -f elf32 "$FILE.asm" -o "$FILE.o"
+                      gcc -m32 -o "$FILE" "$FILE.o"
+                  done
+
                   set +e
-                  ./simple
-                  RETURN_VALUE=$?
-                  if [[ $RETURN_VALUE -ne 5 ]]; then
-                    echo "Unexpected return value from the executable: $RETURN_VALUE"
-                    exit 1
-                  fi
-                  ./fn
-                  RETURN_VALUE=$?
-                  if [[ $RETURN_VALUE -ne 5 ]]; then
-                    echo "Unexpected return value from the executable: $RETURN_VALUE"
-                    exit 2
-                  fi
+                  for FILE in "${INPUTS[@]}"; do
+                      ./"$FILE"
+                      RETURN_VALUE=$?
+                      if [[ $RETURN_VALUE -ne 5 ]]; then
+                          echo "Unexpected return value from the $FILE executable: $RETURN_VALUE"
+                          exit 1
+                      fi
+                  done
+
                   exit 0

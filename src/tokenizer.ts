@@ -14,6 +14,7 @@ export enum TokenType {
     LeftParen = 'LEFT_PAREN',
     RightParen = 'RIGHT_PAREN',
     Comma = 'COMMA',
+    IfKeyword = 'IF_KEYWORD',
 }
 
 export interface Token {
@@ -22,8 +23,6 @@ export interface Token {
 }
 
 export function tokenize(code: string): Token[] {
-    const keywords = new Set(['int']);
-
     const tokens: Token[] = [];
     let cursor = 0;
 
@@ -84,13 +83,15 @@ export function tokenize(code: string): Token[] {
                 identifier += code[cursor];
             }
 
-            if (keywords.has(identifier)) {
+            if (identifier === 'int') {
                 tokens.push({ type: TokenType.IntKeyword, value: identifier });
             } else if (identifier === 'return') {
                 tokens.push({
                     type: TokenType.ReturnKeyword,
                     value: identifier,
                 });
+            } else if (identifier === 'if') {
+                tokens.push({ type: TokenType.IfKeyword, value: identifier });
             } else {
                 tokens.push({ type: TokenType.Identifier, value: identifier });
             }

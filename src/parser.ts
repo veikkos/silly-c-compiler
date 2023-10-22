@@ -9,6 +9,7 @@ import {
     BinaryExpressionNode,
     ParameterNode,
     FunctionCallNode,
+    IfStatementNode,
 } from './ast';
 
 let tokens: Token[] = [];
@@ -81,6 +82,8 @@ function parseStatement(): ASTNode {
         return parseReturnStatement();
     } else if (tokens[cursor].type === TokenType.Identifier) {
         return parseFunctionCallOrAssignment();
+    } else if (tokens[cursor].type === TokenType.IfKeyword) {
+        return parseIfStatement();
     } else {
         throw new Error(`Unexpected token: ${tokens[cursor].type}`);
     }
@@ -112,6 +115,20 @@ function parseFunctionCallOrAssignment(): ASTNode {
             `Unexpected token after identifier: ${tokens[cursor].type}`,
         );
     }
+}
+
+function parseIfStatement(): IfStatementNode {
+    match(TokenType.IfKeyword);
+    match(TokenType.LeftParen);
+    const condition = parseExpression();
+    match(TokenType.RightParen);
+    const body = parseBlock();
+
+    return {
+        type: 'IfStatement',
+        condition,
+        body,
+    };
 }
 
 function parseArguments(): ASTNode[] {

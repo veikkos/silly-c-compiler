@@ -7,6 +7,7 @@ import {
 
 let assemblyCode = '';
 let dataSegment = 'section .data\n';
+let labelCounter = 0;
 
 function generateAssemblyCode(ast: ASTNode[]): string {
     assemblyCode = '';
@@ -69,6 +70,15 @@ function generateStatement(node: ASTNode, parameters: ParameterNode[]): void {
             generateExpression(node.argument, parameters);
             break;
 
+        case 'IfStatement': {
+            const endLabel = generateUniqueLabel('end_if');
+            generateCondition(node.condition, endLabel, parameters);
+            node.body.forEach((statement) =>
+                generateStatement(statement, parameters),
+            );
+            assemblyCode += `${endLabel}:\n`;
+            break;
+        }
         default:
             throw new Error(`Unsupported statement type: ${node.type}`);
     }
@@ -122,6 +132,20 @@ function isParameter(
     return parameters.some(
         (param) => param.identifier.value === identifier.value,
     );
+}
+
+function generateCondition(
+    node: ASTNode,
+    endLabel: string,
+    parameters: ParameterNode[],
+): void {
+    generateExpression(node, parameters);
+    assemblyCode += 'test eax, eax\n';
+    assemblyCode += `je ${endLabel}\n`;
+}
+
+function generateUniqueLabel(base: string): string {
+    return `${base}_${labelCounter++}`;
 }
 
 function getParameterOffset(
