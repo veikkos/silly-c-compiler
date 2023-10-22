@@ -2,7 +2,6 @@ import { readFileSync, writeFileSync } from 'fs';
 import { parse as p } from 'path';
 import { compile } from './silly';
 
-// Get the filename from the command line arguments
 const fileName = process.argv[2];
 
 if (!fileName) {
@@ -12,7 +11,6 @@ if (!fileName) {
     process.exit(1);
 }
 
-// Read the input C code from the file
 const code = readFileSync(fileName, 'utf8');
 const assemblyCode = compile(code);
 

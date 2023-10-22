@@ -39,7 +39,6 @@ export function performSemanticAnalysis(asts: ASTNode[]): void {
 
             case 'Identifier':
             case 'Literal':
-                // No semantic analysis needed for identifiers and literals
                 break;
 
             default:

@@ -31,9 +31,8 @@ function generateFunctionDeclaration(node: FunctionDeclarationNode): void {
     assemblyCode += `${node.identifier.value}:\n`;
 
     if (node.identifier.value !== 'main') {
-        // Prologue
-        assemblyCode += 'push ebp\n'; // Save old base pointer
-        assemblyCode += 'mov ebp, esp\n'; // Set new base pointer
+        assemblyCode += 'push ebp\n';
+        assemblyCode += 'mov ebp, esp\n';
     }
 
     node.body.forEach((statement) =>
@@ -41,12 +40,11 @@ function generateFunctionDeclaration(node: FunctionDeclarationNode): void {
     );
 
     if (node.identifier.value !== 'main') {
-        // Epilogue
-        assemblyCode += 'mov esp, ebp\n'; // Restore stack pointer
-        assemblyCode += 'pop ebp\n'; // Pop old base pointer
+        assemblyCode += 'mov esp, ebp\n';
+        assemblyCode += 'pop ebp\n';
     }
 
-    assemblyCode += 'ret\n'; // Return instruction for all functions, including main.
+    assemblyCode += 'ret\n';
 }
 
 function generateStatement(node: ASTNode, parameters: ParameterNode[]): void {
@@ -109,23 +107,21 @@ function generateExpression(node: ASTNode, parameters: ParameterNode[]): void {
             break;
 
         case 'BinaryExpression':
-            generateExpression(node.right, parameters); // Evaluate the right-hand side first
-            assemblyCode += `push eax\n`; // Push the result of the right-hand side to the stack
-            generateExpression(node.left, parameters); // Then, evaluate the left-hand side
-            assemblyCode += `pop ebx\n`; // Pop the result of the right-hand side to ebx
+            generateExpression(node.right, parameters);
+            assemblyCode += `push eax\n`;
+            generateExpression(node.left, parameters);
+            assemblyCode += `pop ebx\n`;
             assemblyCode += getBinaryOperation(node.operator);
             break;
 
         case 'FunctionCall':
             node.arguments.reverse().forEach((arg) => {
-                // Reverse to handle right-to-left convention
                 generateExpression(arg, parameters);
-                assemblyCode += `push eax\n`; // Push arguments onto the stack
+                assemblyCode += `push eax\n`;
             });
             assemblyCode += `call ${node.identifier.value}\n`;
-            // Clean up arguments from the stack if there are any
             if (node.arguments.length > 0) {
-                assemblyCode += `add esp, ${4 * node.arguments.length}\n`; // Assuming 32-bit words
+                assemblyCode += `add esp, ${4 * node.arguments.length}\n`;
             }
             break;
 
@@ -167,7 +163,6 @@ function getParameterOffset(
     if (paramIndex === -1)
         throw new Error(`Parameter ${paramName.value} not found!`);
 
-    // Calculate the offset: remember ebp is at [ebp], return address at [ebp + 4]
     return 8 + paramIndex * 4;
 }
 
@@ -180,7 +175,7 @@ const getBinaryOperation = (operator: string): string => {
         case '*':
             return 'imul eax, ebx\n';
         case '/':
-            return 'xor edx, edx\nidiv ebx\n'; // Note that the divisor is now in ebx
+            return 'xor edx, edx\nidiv ebx\n';
         default:
             throw new Error(`Unsupported operator: ${operator}`);
     }
