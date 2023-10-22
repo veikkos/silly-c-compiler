@@ -8,7 +8,8 @@ export type ASTNode =
     | FunctionDeclarationNode
     | ParameterNode
     | FunctionCallNode
-    | IfStatementNode;
+    | IfStatementNode
+    | UnaryExpressionNode;
 
 export interface IdentifierNode {
     type: 'Identifier';
@@ -18,6 +19,12 @@ export interface IdentifierNode {
 export interface LiteralNode {
     type: 'Literal';
     value: string;
+}
+
+export interface UnaryExpressionNode {
+    type: 'UnaryExpression';
+    operator: string;
+    operand: ASTNode;
 }
 
 export interface BinaryExpressionNode {

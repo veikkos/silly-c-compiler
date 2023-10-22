@@ -10,6 +10,7 @@ import {
     ParameterNode,
     FunctionCallNode,
     IfStatementNode,
+    UnaryExpressionNode,
 } from './ast';
 
 let tokens: Token[] = [];
@@ -231,9 +232,30 @@ function parseTerm(): ASTNode {
         return parseIdentifier();
     } else if (tokens[cursor].type === TokenType.IntLiteral) {
         return parseLiteral();
+    } else if (
+        tokens[cursor].type === TokenType.Minus &&
+        isExpressionFollowing()
+    ) {
+        return parseUnaryExpression();
     } else {
         throw new Error(`Unexpected token: ${tokens[cursor].type}`);
     }
+}
+
+function isExpressionFollowing(): boolean {
+    const nextTokenType = tokens[cursor + 1].type;
+    return nextTokenType === TokenType.IntLiteral || nextTokenType === TokenType.Identifier;
+}
+
+function parseUnaryExpression(): UnaryExpressionNode {
+    const operator = tokens[cursor].type;
+    match(operator);
+
+    return {
+        type: 'UnaryExpression',
+        operator: getOperatorSymbol(operator),
+        operand: parseTerm()
+    };
 }
 
 function parseIdentifier(): IdentifierNode {

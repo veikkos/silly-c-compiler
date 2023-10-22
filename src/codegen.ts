@@ -99,6 +99,15 @@ function generateExpression(node: ASTNode, parameters: ParameterNode[]): void {
             assemblyCode += `mov eax, ${node.value}\n`;
             break;
 
+        case 'UnaryExpression':
+            if (node.operator === '-') {
+                generateExpression(node.operand, parameters);
+                assemblyCode += 'neg eax\n';
+            } else {
+                throw new Error(`Unsupported unary operator: ${node.operator}`);
+            }
+            break;
+
         case 'BinaryExpression':
             generateExpression(node.right, parameters); // Evaluate the right-hand side first
             assemblyCode += `push eax\n`; // Push the result of the right-hand side to the stack

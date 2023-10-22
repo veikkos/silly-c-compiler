@@ -33,6 +33,10 @@ export function performSemanticAnalysis(asts: ASTNode[]): void {
                 node.body.forEach(traverse);
                 break;
 
+            case 'UnaryExpression':
+                traverse(node.operand);
+                break;
+
             case 'Identifier':
             case 'Literal':
                 // No semantic analysis needed for identifiers and literals
