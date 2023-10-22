@@ -5,19 +5,38 @@ import {
     IdentifierNode,
 } from './ast';
 
-let assemblyCode = '';
-let dataSegment = 'section .data\n';
-let labelCounter = 0;
+let assemblyCode: string;
+let dataSegment: string;
+let labelCounter: number;
+
+const declaredFunctions: Set<string> = new Set();
+const externalFunctions: Set<string> = new Set();
 
 function generateAssemblyCode(ast: ASTNode[]): string {
     assemblyCode = '';
     dataSegment = 'section .data\n';
+    labelCounter = 0;
+    declaredFunctions.clear();
+    externalFunctions.clear();
 
     ast.forEach((node) => {
         generateProgram(node);
     });
 
-    return dataSegment + 'section .text\nglobal main\n' + assemblyCode;
+    // Prepend extern declarations for external function calls
+    let externSegment = '';
+    externalFunctions.forEach((funcName) => {
+        if (!declaredFunctions.has(funcName)) {
+            externSegment += `extern ${funcName}\n`;
+        }
+    });
+
+    return (
+        externSegment +
+        dataSegment +
+        'section .text\nglobal main\n' +
+        assemblyCode
+    );
 }
 
 function generateProgram(node: ASTNode): void {
@@ -29,6 +48,8 @@ function generateProgram(node: ASTNode): void {
 
 function generateFunctionDeclaration(node: FunctionDeclarationNode): void {
     assemblyCode += `${node.identifier.value}:\n`;
+
+    declaredFunctions.add(node.identifier.value);
 
     if (node.identifier.value !== 'main') {
         // Prologue
@@ -109,23 +130,25 @@ function generateExpression(node: ASTNode, parameters: ParameterNode[]): void {
             break;
 
         case 'BinaryExpression':
-            generateExpression(node.right, parameters); // Evaluate the right-hand side first
-            assemblyCode += `push eax\n`; // Push the result of the right-hand side to the stack
-            generateExpression(node.left, parameters); // Then, evaluate the left-hand side
-            assemblyCode += `pop ebx\n`; // Pop the result of the right-hand side to ebx
+            generateExpression(node.right, parameters);
+            assemblyCode += `push eax\n`;
+            generateExpression(node.left, parameters);
+            assemblyCode += `pop ebx\n`;
             assemblyCode += getBinaryOperation(node.operator);
             break;
 
         case 'FunctionCall':
+            if (!declaredFunctions.has(node.identifier.value)) {
+                externalFunctions.add(node.identifier.value);
+            }
+
             node.arguments.reverse().forEach((arg) => {
-                // Reverse to handle right-to-left convention
                 generateExpression(arg, parameters);
-                assemblyCode += `push eax\n`; // Push arguments onto the stack
+                assemblyCode += `push eax\n`;
             });
             assemblyCode += `call ${node.identifier.value}\n`;
-            // Clean up arguments from the stack if there are any
             if (node.arguments.length > 0) {
-                assemblyCode += `add esp, ${4 * node.arguments.length}\n`; // Assuming 32-bit words
+                assemblyCode += `add esp, ${4 * node.arguments.length}\n`;
             }
             break;
 

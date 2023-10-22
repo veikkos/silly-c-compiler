@@ -66,7 +66,7 @@ jobs:
 
             - name: Compile, Assemble, Link, and Run
               run: |
-                  INPUTS=("simple" "fn" "if" "if_2" "unary")
+                  INPUTS=("simple" "fn" "if" "if_2" "unary" "extern")
 
                   for FILE in "${INPUTS[@]}"; do
                       npm run start "tests/inputs/$FILE.c"

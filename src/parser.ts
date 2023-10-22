@@ -244,7 +244,10 @@ function parseTerm(): ASTNode {
 
 function isExpressionFollowing(): boolean {
     const nextTokenType = tokens[cursor + 1].type;
-    return nextTokenType === TokenType.IntLiteral || nextTokenType === TokenType.Identifier;
+    return (
+        nextTokenType === TokenType.IntLiteral ||
+        nextTokenType === TokenType.Identifier
+    );
 }
 
 function parseUnaryExpression(): UnaryExpressionNode {
@@ -254,7 +257,7 @@ function parseUnaryExpression(): UnaryExpressionNode {
     return {
         type: 'UnaryExpression',
         operator: getOperatorSymbol(operator),
-        operand: parseTerm()
+        operand: parseTerm(),
     };
 }
 
