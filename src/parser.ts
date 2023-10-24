@@ -181,10 +181,6 @@ function parseVariableDeclaration(
 
     match(context, TokenType.Semicolon);
 
-    if (!value) {
-        throw new Error('Variable declaration must have a value');
-    }
-
     return {
         type: 'VariableDeclaration',
         identifier,

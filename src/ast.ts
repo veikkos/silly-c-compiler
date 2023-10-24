@@ -37,7 +37,7 @@ export interface BinaryExpressionNode {
 export interface VariableDeclarationNode {
     type: 'VariableDeclaration';
     identifier: IdentifierNode;
-    value: ASTNode;
+    value: ASTNode | null;
 }
 
 export interface AssignmentNode {

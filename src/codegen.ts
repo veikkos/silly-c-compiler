@@ -66,12 +66,16 @@ function generateStatement(
 ): void {
     switch (node.type) {
         case 'VariableDeclaration':
-            if (node.value.type === 'Literal') {
-                context.dataSegment += `${node.identifier.value} dd ${node.value.value}\n`;
+            if (node.value) {
+                if (node.value.type === 'Literal') {
+                    context.dataSegment += `${node.identifier.value} dd ${node.value.value}\n`;
+                } else {
+                    context.dataSegment += `${node.identifier.value} dd 0\n`;
+                    generateExpression(context, node.value, parameters);
+                    context.assemblyCode += `mov [${node.identifier.value}], eax\n`;
+                }
             } else {
                 context.dataSegment += `${node.identifier.value} dd 0\n`;
-                generateExpression(context, node.value, parameters);
-                context.assemblyCode += `mov [${node.identifier.value}], eax\n`;
             }
             break;
 

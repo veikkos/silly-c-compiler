@@ -9,6 +9,12 @@ export function performSemanticAnalysis(asts: ASTNode[]): void {
                 break;
 
             case 'VariableDeclaration':
+                traverse(node.identifier);
+                if (node.value !== null) {
+                    traverse(node.value);
+                }
+                break;
+
             case 'Assignment':
                 traverse(node.identifier);
                 traverse(node.value);
