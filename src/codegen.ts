@@ -9,6 +9,8 @@ interface CodeGenerationContext {
     assemblyCode: string;
     dataSegment: string;
     labelCounter: number;
+    variableMap: Map<string, number>;
+    currentOffset: number;
 }
 
 function generateAssemblyCode(ast: ASTNode[]): string {
@@ -16,6 +18,8 @@ function generateAssemblyCode(ast: ASTNode[]): string {
         assemblyCode: '',
         dataSegment: 'section .data\n',
         labelCounter: 0,
+        variableMap: new Map(),
+        currentOffset: 0,
     };
 
     ast.forEach((node) => {
@@ -41,21 +45,24 @@ function generateFunctionDeclaration(
     node: FunctionDeclarationNode,
 ): void {
     context.assemblyCode += `${node.identifier.value}:\n`;
+    context.assemblyCode += 'push ebp\n';
+    context.assemblyCode += 'mov ebp, esp\n';
 
-    if (node.identifier.value !== 'main') {
-        context.assemblyCode += 'push ebp\n';
-        context.assemblyCode += 'mov ebp, esp\n';
+    const totalSpaceForVariables =
+        node.body.filter(
+            (statement) => statement.type === 'VariableDeclaration',
+        ).length * 4;
+
+    if (totalSpaceForVariables > 0) {
+        context.assemblyCode += `sub esp, ${totalSpaceForVariables}\n`;
     }
 
     node.body.forEach((statement) =>
         generateStatement(context, statement, node.parameters),
     );
 
-    if (node.identifier.value !== 'main') {
-        context.assemblyCode += 'mov esp, ebp\n';
-        context.assemblyCode += 'pop ebp\n';
-    }
-
+    context.assemblyCode += 'mov esp, ebp\n';
+    context.assemblyCode += 'pop ebp\n';
     context.assemblyCode += 'ret\n';
 }
 
@@ -66,22 +73,47 @@ function generateStatement(
 ): void {
     switch (node.type) {
         case 'VariableDeclaration':
-            if (node.value) {
-                if (node.value.type === 'Literal') {
-                    context.dataSegment += `${node.identifier.value} dd ${node.value.value}\n`;
+            {
+                context.currentOffset += 4;
+                context.variableMap.set(
+                    node.identifier.value,
+                    context.currentOffset,
+                );
+                const variableOffset = getOffsetFromEBP(
+                    node.identifier,
+                    parameters,
+                    context,
+                );
+
+                const offsetWithSign =
+                    variableOffset >= 0
+                        ? `+${variableOffset}`
+                        : `${variableOffset}`;
+                if (node.value) {
+                    if (node.value.type === 'Literal') {
+                        context.assemblyCode += `mov dword [ebp ${offsetWithSign}], ${node.value.value}\n`;
+                    } else {
+                        generateExpression(context, node.value, parameters);
+                        context.assemblyCode += `mov [ebp ${offsetWithSign}], eax\n`;
+                    }
                 } else {
-                    context.dataSegment += `${node.identifier.value} dd 0\n`;
-                    generateExpression(context, node.value, parameters);
-                    context.assemblyCode += `mov [${node.identifier.value}], eax\n`;
+                    context.assemblyCode += `mov dword [ebp ${offsetWithSign}], 0\n`;
                 }
-            } else {
-                context.dataSegment += `${node.identifier.value} dd 0\n`;
             }
             break;
 
         case 'Assignment':
-            generateExpression(context, node.value, parameters);
-            context.assemblyCode += `mov [${node.identifier.value}], eax\n`;
+            {
+                generateExpression(context, node.value, parameters);
+                const offset = getOffsetFromEBP(
+                    node.identifier,
+                    parameters,
+                    context,
+                );
+                context.assemblyCode += `mov [ebp ${
+                    offset >= 0 ? '+' : ''
+                } ${offset}], eax\n`;
+            }
             break;
 
         case 'ReturnStatement':
@@ -109,11 +141,11 @@ function generateExpression(
 ): void {
     switch (node.type) {
         case 'Identifier':
-            if (parameters && isParameter(node, parameters)) {
-                const offset = getParameterOffset(parameters, node);
-                context.assemblyCode += `mov eax, [ebp + ${offset}]\n`;
-            } else {
-                context.assemblyCode += `mov eax, [${node.value}]\n`;
+            {
+                const offset = getOffsetFromEBP(node, parameters, context);
+                context.assemblyCode += `mov eax, [ebp ${
+                    offset >= 0 ? '+' : ''
+                }${offset}]\n`;
             }
             break;
 
@@ -183,6 +215,16 @@ function generateUniqueLabel(
     return `${base}_${context.labelCounter++}`;
 }
 
+function getOffsetFromEBP(
+    identifier: IdentifierNode,
+    parameters: ParameterNode[],
+    context: CodeGenerationContext,
+): number {
+    return isParameter(identifier, parameters)
+        ? getParameterOffset(parameters, identifier)
+        : -getVariableOffsetFromEBP(identifier, context);
+}
+
 function getParameterOffset(
     parameters: ParameterNode[],
     paramName: IdentifierNode,
@@ -190,10 +232,23 @@ function getParameterOffset(
     const paramIndex = parameters.findIndex(
         (param) => param.identifier.value === paramName.value,
     );
-    if (paramIndex === -1)
+    if (paramIndex === -1) {
         throw new Error(`Parameter ${paramName.value} not found!`);
-
+    }
     return 8 + paramIndex * 4;
+}
+
+function getVariableOffsetFromEBP(
+    identifier: IdentifierNode,
+    context: CodeGenerationContext,
+): number {
+    const offset = context.variableMap.get(identifier.value);
+    if (offset === undefined) {
+        throw new Error(
+            `Variable ${identifier.value} not found in the context.`,
+        );
+    }
+    return offset;
 }
 
 const getBinaryOperation = (operator: string): string => {

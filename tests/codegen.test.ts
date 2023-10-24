@@ -43,15 +43,20 @@ describe('generateAssemblyCode', () => {
         ];
 
         const expectedAssemblyCode = `section .data
-a dd 3
 section .text
 global main
 main:
+push ebp
+mov ebp, esp
+sub esp, 4
+mov dword [ebp -4], 3
 mov eax, 10
 push eax
-mov eax, [a]
+mov eax, [ebp -4]
 pop ebx
 add eax, ebx
+mov esp, ebp
+pop ebp
 ret
 `;
 

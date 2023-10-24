@@ -7,30 +7,33 @@ describe('compile', () => {
     test('should compile simple.c', () => {
         const code = readFileSync(`${testFilePath}/simple.c`, 'utf8');
         const expectedAssemblyCode = `section .data
-a dd 5
-b dd 10
-c dd 3
-sum dd 0
-another dd 0
 section .text
 global main
 main:
-mov eax, [b]
+push ebp
+mov ebp, esp
+sub esp, 20
+mov dword [ebp -4], 5
+mov dword [ebp -8], 10
+mov dword [ebp -12], 3
+mov eax, [ebp -8]
 push eax
-mov eax, [a]
+mov eax, [ebp -4]
 pop ebx
 add eax, ebx
-mov [sum], eax
-mov eax, [c]
+mov [ebp -16], eax
+mov eax, [ebp -12]
 push eax
-mov eax, [sum]
+mov eax, [ebp -16]
 pop ebx
 xor edx, edx
 idiv ebx
-mov [another], eax
-mov eax, [another]
-mov [a], eax
-mov eax, [a]
+mov [ebp -20], eax
+mov eax, [ebp -20]
+mov [ebp  -4], eax
+mov eax, [ebp -4]
+mov esp, ebp
+pop ebp
 ret
 `;
 
@@ -41,7 +44,6 @@ ret
     test('should compile fn.c', () => {
         const code = readFileSync(`${testFilePath}/fn.c`, 'utf8');
         const expectedAssemblyCode = `section .data
-c dd 0
 section .text
 global main
 fn:
@@ -49,19 +51,24 @@ push ebp
 mov ebp, esp
 mov eax, 3
 push eax
-mov eax, [ebp + 8]
+mov eax, [ebp +8]
 pop ebx
 add eax, ebx
 mov esp, ebp
 pop ebp
 ret
 main:
+push ebp
+mov ebp, esp
+sub esp, 4
 mov eax, 2
 push eax
 call fn
 add esp, 4
-mov [c], eax
-mov eax, [c]
+mov [ebp -4], eax
+mov eax, [ebp -4]
+mov esp, ebp
+pop ebp
 ret
 `;
 
@@ -72,31 +79,36 @@ ret
     test('should compile if.c', () => {
         const code = readFileSync(`${testFilePath}/if.c`, 'utf8');
         const expectedAssemblyCode = `section .data
-c dd 0
 section .text
 global main
 main:
-mov eax, [c]
+push ebp
+mov ebp, esp
+sub esp, 4
+mov dword [ebp -4], 0
+mov eax, [ebp -4]
 test eax, eax
 je end_if_0
 mov eax, 9
 push eax
-mov eax, [c]
+mov eax, [ebp -4]
 pop ebx
 add eax, ebx
-mov [c], eax
+mov [ebp  -4], eax
 end_if_0:
 mov eax, 1
 test eax, eax
 je end_if_1
 mov eax, 5
 push eax
-mov eax, [c]
+mov eax, [ebp -4]
 pop ebx
 add eax, ebx
-mov [c], eax
+mov [ebp  -4], eax
 end_if_1:
-mov eax, [c]
+mov eax, [ebp -4]
+mov esp, ebp
+pop ebp
 ret
 `;
 
