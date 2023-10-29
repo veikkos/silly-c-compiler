@@ -29,12 +29,27 @@ class ParserContext {
 
 export function parse(tokenList: Token[]): ASTNode[] {
     const context = new ParserContext(tokenList);
-
     const astNodes: ASTNode[] = [];
 
     while (context.cursor < context.tokens.length) {
-        const functionNode = parseFunctionDeclaration(context);
-        astNodes.push(functionNode);
+        const currentToken = context.currentToken();
+        if (currentToken.type === TokenType.IntKeyword) {
+            const nextToken = context.tokens[context.cursor + 1];
+            if (nextToken.type === TokenType.Identifier) {
+                const afterNextToken = context.tokens[context.cursor + 2];
+                if (afterNextToken.type === TokenType.LeftParen) {
+                    astNodes.push(parseFunctionDeclaration(context));
+                } else {
+                    astNodes.push(parseVariableDeclaration(context));
+                }
+            } else {
+                throw new Error(
+                    `Unexpected token after int keyword: ${nextToken.type}`,
+                );
+            }
+        } else {
+            throw new Error(`Unexpected token: ${currentToken.type}`);
+        }
     }
 
     return astNodes;

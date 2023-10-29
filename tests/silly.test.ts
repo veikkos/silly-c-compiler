@@ -7,6 +7,7 @@ describe('compile', () => {
     test('should compile simple.c', () => {
         const code = readFileSync(`${testFilePath}/simple.c`, 'utf8');
         const expectedAssemblyCode = `section .data
+section .bss
 section .text
 global main
 main:
@@ -44,6 +45,7 @@ ret
     test('should compile fn.c', () => {
         const code = readFileSync(`${testFilePath}/fn.c`, 'utf8');
         const expectedAssemblyCode = `section .data
+section .bss
 section .text
 global main
 fn:
@@ -79,6 +81,7 @@ ret
     test('should compile if.c', () => {
         const code = readFileSync(`${testFilePath}/if.c`, 'utf8');
         const expectedAssemblyCode = `section .data
+section .bss
 section .text
 global main
 main:

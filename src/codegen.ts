@@ -3,13 +3,16 @@ import {
     FunctionDeclarationNode,
     ParameterNode,
     IdentifierNode,
+    VariableDeclarationNode,
 } from './ast';
 
 interface CodeGenerationContext {
     assemblyCode: string;
     dataSegment: string;
+    bssSegment: string;
     labelCounter: number;
     variableMap: Map<string, number>;
+    globalVariables: Set<string>;
     currentOffset: number;
 }
 
@@ -17,20 +20,48 @@ function generateAssemblyCode(ast: ASTNode[]): string {
     const context: CodeGenerationContext = {
         assemblyCode: '',
         dataSegment: 'section .data\n',
+        bssSegment: 'section .bss\n',
         labelCounter: 0,
         variableMap: new Map(),
+        globalVariables: new Set(),
         currentOffset: 0,
     };
 
     ast.forEach((node) => {
-        generateProgram(context, node);
+        if (node.type === 'FunctionDeclaration') {
+            generateProgram(context, node);
+        } else if (node.type === 'VariableDeclaration') {
+            generateGlobalVariable(context, node);
+        } else {
+            throw new Error('Unsupported top-level node type');
+        }
     });
 
     return (
         context.dataSegment +
+        context.bssSegment +
         'section .text\nglobal main\n' +
         context.assemblyCode
     );
+}
+
+function generateGlobalVariable(
+    context: CodeGenerationContext,
+    node: VariableDeclarationNode,
+): void {
+    if (node.value) {
+        if (node.value.type === 'Literal') {
+            context.dataSegment += `${node.identifier.value} dd ${node.value.value}\n`;
+        } else {
+            throw new Error(
+                `Unsupported global initializer of type: ${node.value.type}`,
+            );
+        }
+    } else {
+        context.bssSegment += `${node.identifier.value} resd 1\n`;
+    }
+
+    context.globalVariables.add(node.identifier.value);
 }
 
 function generateProgram(context: CodeGenerationContext, node: ASTNode): void {
@@ -105,14 +136,18 @@ function generateStatement(
         case 'Assignment':
             {
                 generateExpression(context, node.value, parameters);
-                const offset = getOffsetFromEBP(
-                    node.identifier,
-                    parameters,
-                    context,
-                );
-                context.assemblyCode += `mov [ebp ${
-                    offset >= 0 ? '+' : ''
-                } ${offset}], eax\n`;
+                if (isGlobalVariable(context, node.identifier)) {
+                    context.assemblyCode += `mov [${node.identifier.value}], eax\n`;
+                } else {
+                    const offset = getOffsetFromEBP(
+                        node.identifier,
+                        parameters,
+                        context,
+                    );
+                    context.assemblyCode += `mov [ebp ${
+                        offset >= 0 ? '+' : ''
+                    } ${offset}], eax\n`;
+                }
             }
             break;
 
@@ -142,10 +177,14 @@ function generateExpression(
     switch (node.type) {
         case 'Identifier':
             {
-                const offset = getOffsetFromEBP(node, parameters, context);
-                context.assemblyCode += `mov eax, [ebp ${
-                    offset >= 0 ? '+' : ''
-                }${offset}]\n`;
+                if (isGlobalVariable(context, node)) {
+                    context.assemblyCode += `mov eax, [${node.value}]\n`;
+                } else {
+                    const offset = getOffsetFromEBP(node, parameters, context);
+                    context.assemblyCode += `mov eax, [ebp ${
+                        offset >= 0 ? '+' : ''
+                    }${offset}]\n`;
+                }
             }
             break;
 
@@ -197,6 +236,13 @@ function isParameter(
     );
 }
 
+function isGlobalVariable(
+    context: CodeGenerationContext,
+    identifier: IdentifierNode,
+): boolean {
+    return context.globalVariables.has(identifier.value);
+}
+
 function generateCondition(
     context: CodeGenerationContext,
     node: ASTNode,
@@ -220,6 +266,11 @@ function getOffsetFromEBP(
     parameters: ParameterNode[],
     context: CodeGenerationContext,
 ): number {
+    if (isGlobalVariable(context, identifier)) {
+        throw new Error(
+            `Attempting to get EBP offset for global variable: ${identifier.value}`,
+        );
+    }
     return isParameter(identifier, parameters)
         ? getParameterOffset(parameters, identifier)
         : -getVariableOffsetFromEBP(identifier, context);
